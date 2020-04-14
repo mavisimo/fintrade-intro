@@ -86,13 +86,11 @@ daily_close = aapl[['Adj Close']]
 daily_pct_change = daily_close.pct_change()
 daily_pct_change.fillna(0, inplace=True)
 #daily_pct_change = daily_close / daily_close.shift(1) - 1
-print(daily_pct_change)
 daily_pct_change.hist(bins=50)
 plt.show()
 print(daily_pct_change.describe())
 
 cum_daily_return = (1 + daily_pct_change).cumprod()
-print(cum_daily_return)
 cum_daily_return.plot(figsize=(12,8))
 plt.show()
 
@@ -110,8 +108,6 @@ quarter = aapl.resample("4M").mean()
 quarter.pct_change()
 
 
-#%%
-
 """ Returns Multiple Comparison Charts """
 
 daily_close_px = all_data[['Adj Close']].reset_index().pivot('Date', 
@@ -126,6 +122,57 @@ plt.show()
 
 #%%
 
+""" Moving Windows """
 
+adj_close_px = aapl['Adj Close']
+moving_avg = adj_close_px.rolling(window=40).mean()
+print(moving_avg[-10:])
+
+aapl['42'] = adj_close_px.rolling(window=40).mean()
+aapl['252'] = adj_close_px.rolling(window=252).mean()
+aapl[['Adj Close', '42', '252']].plot()
+plt.show()
+
+# Volatility
+min_periods = 75 
+vol = daily_pct_change.rolling(min_periods).std() * np.sqrt(min_periods) 
+vol.plot(figsize=(10, 8))
+plt.show()
+
+#%%
+
+""" Regression Analysis """
+
+import statsmodels.api as sm
+
+all_adj_close = all_data[['Adj Close']]
+all_returns = np.log(all_adj_close / all_adj_close.shift(1))
+
+aapl_returns = all_returns.iloc[all_returns.index.get_level_values('Ticker') == 'AAPL']
+aapl_returns.index = aapl_returns.index.droplevel('Ticker')
+
+msft_returns = all_returns.iloc[all_returns.index.get_level_values('Ticker') == 'MSFT']
+msft_returns.index = msft_returns.index.droplevel('Ticker')
+
+return_data = pd.concat([aapl_returns, msft_returns], axis=1)[1:]
+return_data.columns = ['AAPL', 'MSFT']
+X = sm.add_constant(return_data['AAPL'])
+model = sm.OLS(return_data['MSFT'],X).fit()
+print(model.summary())
+
+plt.plot(return_data['AAPL'], return_data['MSFT'], 'r.')
+ax = plt.axis()
+x = np.linspace(ax[0], ax[1] + 0.01)
+plt.plot(x, model.params[0] + model.params[1] * x, 'b', lw=2)
+
+plt.grid(True)
+plt.axis('tight')
+plt.xlabel('Apple Returns')
+plt.ylabel('Microsoft returns')
+plt.show()
+
+#rolling correlation
+return_data['MSFT'].rolling(window=252).corr(return_data['AAPL']).plot()
+plt.show()
 
 
