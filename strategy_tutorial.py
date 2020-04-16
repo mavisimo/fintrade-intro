@@ -80,5 +80,10 @@ ax1.plot(portfolio.loc[signals.positions == -1.0].index, portfolio.total
 
 plt.show()
 
+#%%
+
+
+
+
 
 
