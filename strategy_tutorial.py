@@ -15,14 +15,19 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
+#definition initialize
 aapl = pdr.get_data_yahoo('AAPL',start=datetime.datetime(2014, 10, 1), 
                           end=datetime.datetime(2020, 1, 1))
+aapl.to_csv('aapl_data.csv')
+writer = pd.ExcelWriter('aapl_data.xlsx', engine='xlsxwriter')
+aapl.to_excel(writer, sheet_name='Yahoo Data')
 
 
 #%%
 
 """ Moving Average Crossover """
 
+#definition strategy
 short_window = 30
 long_window = 120
 signals = pd.DataFrame(index=aapl.index)
@@ -37,7 +42,7 @@ signals['signal'][short_window:] = np.where(signals['shortm_avg'][short_window:]
 signals['long_short'] = signals['signal'].diff()
 
 print(signals)
-
+signals.to_excel(writer, sheet_name='Strategy')
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111,  ylabel='Price in $')
@@ -51,6 +56,7 @@ ax1.plot(signals.loc[signals.long_short == -1.0].index, signals.shortm_avg
 
 plt.show()
 
+#definition backtesting
 """ Backtesting """
 
 initial_capital = 6000
@@ -67,18 +73,19 @@ portfolio['total'] = portfolio['holdings'] + portfolio['cash']
 portfolio['returns'] = portfolio['total'].pct_change()
 
 print(portfolio.head())
+portfolio.to_excel(writer, sheet_name='Portfolio')
 
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111, ylabel='Portfolio value in $')
-
 portfolio['total'].plot(ax=ax1, lw=1)
 ax1.plot(portfolio.loc[signals.long_short == 1.0].index, portfolio.total
          [signals.long_short == 1.0], '^', markersize=8, color='m')
-ax1.plot(portfolio.loc[signals.positions == -1.0].index, portfolio.total
-         [signals.positions == -1.0], 'v', markersize=8, color='k')
-
+ax1.plot(portfolio.loc[signals.long_short == -1.0].index, portfolio.total
+         [signals.long_short == -1.0], 'v', markersize=8, color='k')
 plt.show()
+
+writer.save()
 
 #%%
 
