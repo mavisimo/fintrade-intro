@@ -213,17 +213,22 @@ save(ticker, data, moving_avg, portfolio)
 evaluate(ticker,data,sp500,portfolio)
 
 #%%
-tickers = ['AAPL', 'MSFT', 'IBM', 'GOOG']
+tickers = ['AAPL', 'TSLA', 'AMZN', 'GOOG']
 stocks = []
 for ticker in tickers:
     data = initialize(ticker)
     moving_avg = strategy(data,30,120)
-    stocks.append(portfolios(ticker, data, moving_avg, 10, 2000))
+    stocks.append(portfolios(ticker, data, moving_avg, 100, 5000))
 returns = diversify(stocks)
+
+sp500 = initialize('SPY')
+market_strat = strategy(sp500,30,120)
+m_portfolio = portfolios(ticker, sp500, market_strat, 100, 5000)
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111, ylabel='Portfolio value in $')
-portfolio['total'].plot(ax=ax1, lw=1)
+returns['total'].plot(ax=ax1, lw=1, color='r')
+m_portfolio['total'].plot(ax=ax1, lw=1)
 plt.show()
 t_return = returns['returns']
 print("Sharpe Ratio:",np.sqrt(252) * (t_return.mean() / t_return.std()))
