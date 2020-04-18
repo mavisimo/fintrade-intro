@@ -142,6 +142,13 @@ def portfolios(ticker, data, signals, shares, initial_capital):
     portfolio['returns'] = portfolio['total'].pct_change()
     return portfolio
 
+def diversify(stocks): # list of stocks
+    returns = pd.DataFrame(index=stocks[0].index)
+    for portfolio in stocks:
+        returns['total'] = portfolio['holdings'] + portfolio['cash']
+        returns['returns'] = portfolio['total'].pct_change()
+    return returns
+
 def backtest(data, signals, portfolio):
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111,  ylabel='Price in $')
@@ -181,7 +188,8 @@ def evaluate(ticker,data,benchmark,portfolio):
     sharpe_ratio = np.sqrt(252) * (returns.mean() / returns.std())
     print("Sharpe Ratio:",sharpe_ratio)
     data_returns = np.log(data[['Adj Close']] / data[['Adj Close']].shift(1))
-    bench_returns = np.log(benchmark[['Adj Close']] / benchmark[['Adj Close']].shift(1))
+    bench_returns = np.log(benchmark[['Adj Close']] / 
+                           benchmark[['Adj Close']].shift(1))
     return_data = pd.concat([bench_returns, data_returns], axis=1)[1:]
     return_data.columns = ['Market', ticker]
     model = sm.OLS(return_data[ticker],
@@ -190,13 +198,12 @@ def evaluate(ticker,data,benchmark,portfolio):
     print('Beta:',model.params[1])
     print('R-Squared',model.rsquared)
     days = (data.index[-1] - data.index[0]).days
-    cagr = ((((data['Adj Close'][-1]) / data['Adj Close'][1])) ** (365.0/days)) - 1
+    cagr = ((((data['Adj Close'][-1]) / data['Adj Close'][1])) ** 
+            (365.0/days)) - 1
     print("CAGR:",cagr)
-    
 
 #%%
-
-ticker = 'MSFT'
+ticker = 'GOOG'
 data = initialize(ticker)
 sp500 = initialize('SPY')
 moving_avg = strategy(data,30,120)
@@ -205,4 +212,18 @@ backtest(data, moving_avg, portfolio)
 save(ticker, data, moving_avg, portfolio)
 evaluate(ticker,data,sp500,portfolio)
 
+#%%
+tickers = ['AAPL', 'MSFT', 'IBM', 'GOOG']
+stocks = []
+for ticker in tickers:
+    data = initialize(ticker)
+    moving_avg = strategy(data,30,120)
+    stocks.append(portfolios(ticker, data, moving_avg, 10, 2000))
+returns = diversify(stocks)
 
+fig = plt.figure()
+ax1 = fig.add_subplot(111, ylabel='Portfolio value in $')
+portfolio['total'].plot(ax=ax1, lw=1)
+plt.show()
+t_return = returns['returns']
+print("Sharpe Ratio:",np.sqrt(252) * (t_return.mean() / t_return.std()))
