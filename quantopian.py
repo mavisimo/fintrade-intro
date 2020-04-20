@@ -11,8 +11,9 @@ remotely.
 
 from zipline.api import order, order_target, record, symbol, log
 
+#%%
 """
-Quantopian example: a simple momentum script, buy when the stock goes up 
+Quantopian start: a simple momentum script, buy when the stock goes up 
 quickly and sell when it goes down.  
 """
 
@@ -20,23 +21,28 @@ def initialize(context):
     context.security = symbol('AAPL')
 
 def handle_data(context, data):
-    # moving average for the last 5 days and its current price. 
-    average_price = data[context.security].mavg(5)
+    # moving average for long and short window
+    MA1 = data[context.security].mavg(30)
+    MA2 = data[context.security].mavg(120)
     current_price = data[context.security].price
+    current_positions = context.portfolio.positions[symbol('AAPL')].amount
     # calculate the current amount of cash in our portfolio.   
     cash = context.portfolio.cash
 
-    if current_price > 1.01*average_price and cash > current_price:
+    if (MA1>MA2) and current_positions == 0:
         # how many shares we can buy
         number_of_shares = int(cash/current_price)
         # buy order
         order(context.security, +number_of_shares)
         log.info("Buying %s" % (context.security.symbol))
-    elif current_price < average_price:
+    elif (MA1<MA2) and current_positions != 0:
         # sell all of our shares
         order_target(context.security, 0)
         log.info("Selling %s" % (context.security.symbol))
 
-    # record the Apple stock price.
-    record(stock_price=data[context.security].price)
+    # record the Apple stock price and moving averages
+    record(MA1=MA1, MA2=MA2, price=current_price)
 
+#%%
+    
+    

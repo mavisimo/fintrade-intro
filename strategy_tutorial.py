@@ -113,7 +113,7 @@ plt.show()
 #%%
 
 def initialize(ticker):
-    data = pdr.get_data_yahoo(ticker,start=datetime.datetime(2014, 10, 1), 
+    data = pdr.get_data_yahoo(ticker,start=datetime.datetime(2017, 10, 1), 
                           end=datetime.datetime(2020, 1, 1))
     return data
     
@@ -203,7 +203,7 @@ def evaluate(ticker,data,benchmark,portfolio):
     print("CAGR:",cagr)
 
 #%%
-ticker = 'GOOG'
+ticker = 'AAPL'
 data = initialize(ticker)
 sp500 = initialize('SPY')
 moving_avg = strategy(data,30,120)
