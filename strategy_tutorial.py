@@ -207,7 +207,7 @@ ticker = 'AAPL'
 data = initialize(ticker)
 sp500 = initialize('SPY')
 moving_avg = strategy(data,30,120)
-portfolio = portfolios(ticker, data, moving_avg, 100, 10000)
+portfolio = portfolios(ticker, data, moving_avg, 70, 10000)
 backtest(data, moving_avg, portfolio)
 save(ticker, data, moving_avg, portfolio)
 evaluate(ticker,data,sp500,portfolio)
